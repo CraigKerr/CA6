@@ -1,5 +1,6 @@
 package com.dkit.gd2.craigkerr.DAO.PlaneDAO;
 
+import com.dkit.gd2.craigkerr.Caching.Cache;
 import com.dkit.gd2.craigkerr.DTO.Plane;
 
 import java.sql.Connection;
@@ -12,6 +13,8 @@ import com.google.gson.Gson;
 
 public class MySQLPlaneDAO extends MySQLDAO implements IPlane
 {
+    Cache cache = new Cache();
+
     @Override
     public List<Plane> findAllPlanes()
     {
@@ -77,6 +80,11 @@ public class MySQLPlaneDAO extends MySQLDAO implements IPlane
                 String name = rs.getString("PlaneName");
                 float rating = rs.getFloat("PlaneRating");
                 p = new Plane(id, name, rating);
+            }
+
+            if(p != null)
+            {
+                cache.put(id, p);
             }
         }
         catch (Exception e)
@@ -310,5 +318,16 @@ public class MySQLPlaneDAO extends MySQLDAO implements IPlane
 
         return gson.toJson(p);
     }
+
+
+
+    //Create a method which will cache recent queries to planes and return the results from the cache if the query has been run recently
+    //This method will be called by the findAllPlanesJSON() and findPlaneByIdJSON() methods
+    //The cache will be a Map<String, String> where the key is the query and the value is the JSON string
+    //The cache will be cleared every 5 minutes
+    //The cache will be cleared if the number of entries in the cache is greater than 100
+    //The cache will be cleared if the number of entries in the cache is greater than 10 and the query is not in the cache
+    //The cache will be cleared if the number of entries in the cache is greater than 10 and the query is in the cache but the query has not been run in the last 5 minutes
+
 
 }
